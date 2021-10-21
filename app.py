@@ -5,6 +5,8 @@ import numpy as np
 import plotly.express as px 
 from PIL import Image
 import yfinance as yf
+import pickle
+
 df = pd.read_excel('BASE_FINAL.xlsx')
 
 df.loc[df['ESTU_HORASSEMANATRABAJA'] == 0, 'ESTU_HORASSEMANATRABAJA'] = 'cero'
@@ -164,13 +166,13 @@ st.write('GRÁFICA')
 st.write(fig9)
 st.write('De acuerdo a la tabla anterior se puede decir que aquellos quienes no trabajan tienen en promedio el puntaje mas alto a comparación de quiénes si trabajan. El puntaje más bajo corresponde a quiénes trabajan más de 30 horas a la semana. Hay algunos datos atipicos dentro de la categoria "menos de 10 horas". Asi mismo puede verse que no existe gran diferencia en el puntaje de aquellos estudiantes que trabajan entre 11 y 20  a quienes trabajan menos de 10 horas y mas de 30 horas. ')
 
+
+
 st.subheader('MODELO')
-edad = st.number_input('Edad', min_value=8)
-pd.get_dummies(df,columns={'FAMI_EDUCACIONMADRE'},drop_first=True)
+EDAD = st.number_input('¿Cuál es su edad?', min_value=8)
+famimadre=st.selectbox('¿Cuál es el nivel educativo más alto alcanzado por la madre?',options={'Ninguno','Primaria incompleta','Primaria completa','Secundaria (Bachillerato) incompleta','Secundaria (Bachillerato) completa','Tecnica o tecnologica incompleta','Tecnica o tecnologica completa','Educacion profesional incompleta','Educacion profesional completa','Postgrado','No Aplica','No sabe'})
 
-famimadre=st.selectbox('FAMI_EDUCACIONMADRE',options={'Ninguno','Primaria incompleta','Primaria completa','Secundaria (Bachillerato) incompleta','Secundaria (Bachillerato) completa','Tecnica o tecnologica incompleta','Tecnica o tecnologica completa','Educacion profesional incompleta','Postgrado','No Aplica','No sabe'})
-
-if famimadre == 'Ninguno':
+if famimadre == 'Ninguno':	
     FAMI_EDUCACIONMADRE_Educacion_profesional_incompleta=0
     FAMI_EDUCACIONMADRE_Ninguno=1
     FAMI_EDUCACIONMADRE_No_Aplica=0
@@ -315,67 +317,52 @@ else:
     FAMI_EDUCACIONMADRE_Tecnica_o_tecnologica_completa=0
     FAMI_EDUCACIONMADRE_Tecnica_o_tecnologica_incompleta=0
 
-sexo=st.selectbox('ESTU_GENERO_M',options={'Femenino','Masculino'})
+
+sexo=st.selectbox('¿Cuál es su género?',options={'Femenino','Masculino'})
 
 if sexo == 'Masculino':
     ESTU_GENERO_M = 1
-    ESTU_GENERO_F = 0
-elif sexo == 'Femenino':
-    ESTU_GENERO_M = 0
-    ESTU_GENERO_F = 1
 else:
     ESTU_GENERO_M = 0
-    ESTU_GENERO_F = 0
 
 
-
-internet=st.selectbox('FAMI_TIENEINTERNET_Si',options={'Si','No'})
+internet=st.selectbox('¿Su hogar cuenta con servicio o conexión a internet?',options={'Si','No'})
 
 if internet == 'Si':
     FAMI_TIENEINTERNET_Si = 1
-    FAMI_TIENEINTERNET_No = 0
-elif internet == 'No':
-    FAMI_TIENEINTERNET_Si = 0
-    FAMI_TIENEINTERNET_No = 1
 else:
     FAMI_TIENEINTERNET_Si = 0
-    FAMI_TIENEINTERNET_No = 0
 
 
-computador=st.selectbox('FAMI_TIENECOMPUTADOR_Si',options={'Si','No'})
+computador=st.selectbox('¿Tiene computador?',options={'Si','No'})
 
 if computador == 'Si':
     FAMI_TIENECOMPUTADOR_Si = 1
-    FAMI_TIENECOMPUTADOR_No = 0
-elif computador == 'No':
-    FAMI_TIENECOMPUTADOR_Si = 0
-    FAMI_TIENECOMPUTADOR_No = 1
 else:
     FAMI_TIENECOMPUTADOR_Si = 0
-    FAMI_TIENECOMPUTADOR_No = 0
 
 
-bilingue=st.selectbox('COLE_BILINGUE_S',options={'S','N'})
+bilingue=st.selectbox('¿El establecimiento donde estudia es Bilingue?',options={'S','N'})
 
 if bilingue == 'S':
     COLE_BILINGUE_S = 1
-    COLE_BILINGUE_N = 0
-elif bilingue == 'N':
-    COLE_BILINGUE_S = 0
-    COLE_BILINGUE_N = 1
 else:
     COLE_BILINGUE_S = 0
-    COLE_BILINGUE_N = 0
 
 
-naturaleza=st.selectbox('COLE_NATURALEZA_OFICIAL',options={'OFICIAL','NO OFICIAL'})
+naturaleza=st.selectbox('Indica la naturaleza del Establecimiento',options={'OFICIAL','NO OFICIAL'})
 
 if naturaleza == 'OFICIAL':
     COLE_NATURALEZA_OFICIAL = 1
-    COLE_NATURALEZA_NOOFICIAL = 0
-elif naturaleza == 'NO OFICIAL':
-    COLE_NATURALEZA_OFICIAL = 0
-    COLE_NATURALEZA_NOOFICIAL = 1
 else:
     COLE_NATURALEZA_OFICIAL = 0
-    COLE_NATURALEZA_NOOFICIAL = 0
+
+
+st.subheader('PREDICCIÓN')
+rf_pickle = open('rf_reg.pickle', 'rb')
+rf = pickle.load(rf_pickle)
+rf_pickle.close()
+pred_rf = rf.predict([[EDAD, ESTU_GENERO_M, FAMI_EDUCACIONMADRE_Educacion_profesional_incompleta,FAMI_EDUCACIONMADRE_Ninguno,FAMI_EDUCACIONMADRE_No_Aplica,FAMI_EDUCACIONMADRE_No_sabe,FAMI_EDUCACIONMADRE_Postgrado,
+                    FAMI_EDUCACIONMADRE_Primaria_completa,FAMI_EDUCACIONMADRE_Primaria_incompleta,FAMI_EDUCACIONMADRE_Secundaria_Bachillerato_completa,FAMI_EDUCACIONMADRE_Secundaria_Bachillerato_incompleta,
+                    FAMI_EDUCACIONMADRE_Tecnica_o_tecnologica_completa,FAMI_EDUCACIONMADRE_Tecnica_o_tecnologica_incompleta,FAMI_TIENEINTERNET_Si,FAMI_TIENECOMPUTADOR_Si,COLE_BILINGUE_S,COLE_NATURALEZA_OFICIAL]])
+st.write(f'La predicción del puntaje icfes es:{pred_rf[0]}.')
